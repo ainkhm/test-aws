@@ -1,0 +1,37 @@
+sudo: required
+language: bash
+services:
+  - docker
+
+env:
+  global:
+    - CONTAINER_NAME=serverless-react/travis
+
+matrix:
+  fast_finish: true
+
+cache:
+  directories:
+    - $TRAVIS_BUILD_DIR/node_modules
+
+before_install:
+  - docker build -t $CONTAINER_NAME .
+
+install:
+  - travis_retry ./scripts/ci/install.sh
+
+stages:
+  - build
+  - test
+  - deploy
+
+jobs:
+  include:
+    - script:
+        - ./scripts/ci/check.sh
+        - ./scripts/ci/build.sh
+      stage: build
+    - if: branch IN (master)
+      script:
+        - travis_retry ./scripts/ci/deploy.sh
+      stage: deploy
